@@ -47,7 +47,7 @@
                 <div class="row mt-2">
                     <div class="col-12">
                         <div class="btn-group" role="group" style="width:100%">
-                            <button class="btn btn-primary" @onclick="Install" disabled="@disableInstallConfig">
+                            <button class="@(installStatus != ServerOperationStatus.Succeeded ? "btn btn-primary" : "btn btn-success")" @onclick="Install" disabled="@disableInstallConfig">
                                 <span style="vertical-align: middle;" hidden="@(installStatus != ServerOperationStatus.Succeeded)">
                                     <i class="bi bi-check-circle"></i>
                                 </span>
