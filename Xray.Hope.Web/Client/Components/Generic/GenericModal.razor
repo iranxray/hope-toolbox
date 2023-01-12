@@ -1,0 +1,58 @@
+﻿@using Xray.Hope.Web.Client.Models.Domain.Constants;
+
+@inject IJSRuntime JSRuntime;
+
+<div @ref="modalElement" class="modal fade" tabindex="-1" style="padding-left: 1.5rem;padding-right: 1.5rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="@icon me-1"></i>
+                    @title
+                 </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p style="text-align:justify">@body</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@closeText</button>
+                <button type="button" class="btn btn-primary" hidden="@(string.IsNullOrEmpty(submitText))">@submitText</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string title;
+    private string body;
+    private string icon;
+    private string submitText;
+    private string closeText;
+    private ElementReference modalElement;
+
+    public async Task Open(
+        string title,
+        string body,
+        NotificationStatus notificationStatus,
+        string submitText = null,
+        string closeText = null,
+        Action onSubmitFunc = null)
+    {
+        this.title = title;
+        this.body = body;
+        icon = GetIcon(notificationStatus);
+        this.submitText = submitText;
+        this.closeText = string.IsNullOrEmpty(closeText) ? "بستن" :closeText;
+
+        await JSRuntime.InvokeVoidAsync("openModal", modalElement);
+        StateHasChanged();
+    }
+
+    private string GetIcon(NotificationStatus notificationStatus) => notificationStatus switch
+    {
+        NotificationStatus.Success => "bi bi-check-circle-fill text-success",
+        NotificationStatus.Error => "bi bi-fire text-danger",
+        NotificationStatus.Warning => "bi bi-exclamation-triangle-fill text-warning",
+    };
+}

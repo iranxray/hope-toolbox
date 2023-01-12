@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Xray.Hope.Web</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.rtl.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="Xray.Hope.Web.Client.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+
+<script>
+
+    function scrollConsoleOutputToBottom(textarea) {
+        textarea.scrollTop = textarea.scrollHeight;
+    }
+
+    function openModal(modal) {
+
+        var bootstrapModal = new bootstrap.Modal(modal, {
+            keyboard: false
+        });
+
+        bootstrapModal.show()
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text)
+            .then(function () { console.error(text)})
+            .catch(function (error) { console.error(error) });
+    }
+
+    function enablePopover(popover) {
+        new bootstrap.Popover(popover)
+    }
+
+
+    function showToast(toastElement) {
+        var toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+
+    function fitContentIntoTextarea(textAreaElement) {
+        textAreaElement.style.height = textAreaElement.scrollHeight + 'px';
+    }
+
+</script>

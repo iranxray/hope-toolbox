@@ -1,0 +1,188 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.SignalR.Client;
+@using Xray.Hope.Web.Client.Components
+@using Xray.Hope.Web.Client.Components.Main
+@using Xray.Hope.Web.Client.Models;
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Client.Services.State;
+@using Xray.Hope.Web.Shared.DTO.CreateInstallScripts;
+@using Xray.Hope.Web.Shared.DTO.GetAvailableConfigs;
+@using Xray.Hope.Web.Client.Models.Domain.Constants;
+@using Xray.Hope.Web.Client.Models.Domain;
+
+@inject StateStore StateStore;
+@inject IJSRuntime JSRuntime
+@inject NotificationService NotificationService
+@inject HopeHttpClient HopeHttpClient
+
+@page "/"
+
+<PageTitle>پروژه امید</PageTitle>
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">پروژه امید</li>
+        <li class="breadcrumb-item active" aria-current="page">نصب X-UI</li>
+    </ol>
+</nav>
+
+اینجا تیم امید به شما کمک می‌کند که فیلترشکن X-UI را بر روی سرور خود نصب کنید. هدف از طراحی این وب‌سایت صرفا آسان‌تر کردن فرایند نصب بوده تا بتوان هر چه سریع‌تر استفاده از آن را همگانی کرد.
+
+
+<div class="mt-3">
+    <ServerConnectionSection>
+
+    </ServerConnectionSection>
+</div>
+
+<div class="mt-3 mb-5" hidden="@(!showInstallScriptSection)">
+    <ScriptExecutionSection HubConnectionId="@hubConnectionId"
+                            Scripts="@xuiInstallScripts"
+                            SshConnection="@sshConnection"
+                            XuiConnection="@xuiConnection"></ScriptExecutionSection>
+</div>
+
+<div class="mt-3 mb-5" hidden="@(!showConfigSection)">
+    <XRayConfigurationSection TrojanConfigs="@trojanConfigs"
+                              VlessConfigs="@vlessConfigs"
+                              SshConnection="@sshConnection"
+                              XuiConnection="@xuiConnection">
+    </XRayConfigurationSection>
+</div>
+
+
+@code {
+
+    private string hubConnectionId;
+    private string consoleHubConnectionId;
+    private bool showInstallScriptSection;
+    private bool showConfigSection;
+    private SshConnectionOptions sshConnection;
+    private XuiConnectionOptions xuiConnection;
+    private string xuiInstallScripts;
+    private IEnumerable<XrayConfig> trojanConfigs = new List<XrayConfig>();
+    private IEnumerable<XrayConfig> vlessConfigs = new List<XrayConfig>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateStore.OnStateEventRaised += HandleStateChanged;
+    }
+
+    private async Task HandleStateChanged(StateEvent stateEvent)
+    {
+        if (stateEvent is ServerConnectionSucceeded serverConnectionSucceeded)
+        {
+            sshConnection = serverConnectionSucceeded.Value;
+            showInstallScriptSection = false;
+        }
+
+        if (stateEvent is XuiConnectionSucceeded xuiConnectionSucceeded)
+        {
+            xuiConnection = xuiConnectionSucceeded.Value;
+            showInstallScriptSection = false;
+            var succeeded = await GetXRayConfigurations();
+
+            if (succeeded)
+            {
+                showConfigSection = true;
+            }
+        }
+
+        if (stateEvent is ServerConnectionFailed serverConnectionFailed)
+        {
+            sshConnection = null;
+        }
+
+        if (stateEvent is XuiConnectionFailed xuiConnectionFailed)
+        {
+            xuiConnection = xuiConnectionFailed.Value;
+            showConfigSection = false;
+            var succeeded = await GenerateXuiInstallScripts();
+
+            if (succeeded)
+            {
+                showInstallScriptSection = true;
+            }
+        }
+
+        if (stateEvent is ServerConnectionBeingChecked serverConnectionBeingChecked)
+        {
+            sshConnection = null;
+            showConfigSection = false;
+            showInstallScriptSection = false;
+        }
+
+        if (stateEvent is XuiConnectionBeingChecked xuiConnectionBeingChecked)
+        {
+            xuiConnection = null;
+            showConfigSection = false;
+            showInstallScriptSection = false;
+        }
+
+        if (stateEvent is HubConnectionSucceeded hubConnectionSucceeded)
+        {
+            hubConnectionId = hubConnectionSucceeded.Value.HubConnectionId;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task<bool> GenerateXuiInstallScripts()
+    {
+        try
+        {
+            var result = await HopeHttpClient.GenerateXuiInstallScripts(new CreateInstallScriptsRequest
+                {
+                    ServerAddress = xuiConnection.ServerAddress,
+                    XuiUsername = xuiConnection.XuiUsername,
+                    XuiPassword = xuiConnection.XuiPassword,
+                    XuiPort = xuiConnection.XuiPort.ToString(),
+                });
+
+            if (!result.IsSuccess)
+            {
+                xuiInstallScripts = null;
+                return false;
+            }
+
+            xuiInstallScripts = result.Value.Script;
+
+            NotificationService.AddMessage(
+                "X-UI را نصب کنید",
+                "دستورات لازم برای نصب X-UI تهیه شده. می‌توانید اسکریپت ساخته شده را بر روی سرور نصب کنید.",
+                NotificationStatus.Warning);
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> GetXRayConfigurations()
+    {
+        try
+        {
+            var result = await HopeHttpClient.GetAvailableXRayConfigs();
+
+            if (!result.IsSuccess)
+            {
+                trojanConfigs = Array.Empty<XrayConfig>();
+                vlessConfigs = Array.Empty<XrayConfig>();
+                return false;
+            }
+
+            trojanConfigs = result.Value.TrojanConfigs;
+            vlessConfigs = result.Value.VlessConfigs;
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}

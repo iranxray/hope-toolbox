@@ -1,0 +1,75 @@
+﻿@using Xray.Hope.Web.Client.Models.Domain;
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Client.Services.State;
+@using Xray.Hope.Web.Shared.DTO.GetAvailableConfigs;
+
+@inject StateStore StateStore;
+@inject IJSRuntime JSRuntime
+@inject NotificationService NotificationService
+@inject HopeHttpClient HopeHttpClient
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <i class="bi bi-incognito text-white" style="vertical-align:middle"></i>
+        ساخت کانفیگ
+    </div>
+    <div class="card-body pe-3 ps-3">
+
+        <div class="row mt-1">
+            <div class="col mt-2 mb-3">
+                <h4>
+                    <span class="badge bg-secondary">کانفیگ‌های Trojan</span>
+                </h4>
+
+                <div class="mt-3">
+                    <p style="text-align:justify">
+                        <span>پروتکل Trojan یکی از روش‌های کارا برای عبور از سیستم فیلترینگ می‌باشد. در زیر تعداد کانفیگ Trojan آماده کرده‌ایم که می‌توانید بر روی سرور خود نصب کنید. دقت کنید که این فقط برای راحتی شما است و می‌توانید همواره با مراجعه به پنل X-UI تغییرات لازم را اعمال کنید. برای یادگیری در مورد این روش می‌توانید به</span>
+                        <a href="https://github.com/iranxray/hope#%D9%BE%D8%B1%D9%88%D8%AA%DA%A9%D9%84-vless-%D8%A7%DB%8C%D9%85%D9%86-sunglasses">مقاله</a>
+                        <span>ما در ریپوی امید مراجعه کنید.</span>
+                    </p>
+                </div>
+
+                @foreach (var config in TrojanConfigs)
+                {
+                    <XRayConfigUI Config="@config"
+                              XuiConnection="@XuiConnection"
+                              SshConnection="@SshConnection"></XRayConfigUI>
+                }
+            </div>
+        </div>
+
+        <div class="row mt-1">
+            <div class="col mt-2 mb-3">
+                <h4><span class="badge bg-secondary">کانفیگ‌های VLESS</span></h4>
+                <div class="mt-3">
+                    <p style="text-align:justify">
+                        <span>پروتکل VLESS یکی از روش‌های کارا برای عبور از سیستم فیلترینگ می‌باشد. در زیر تعداد کانفیگ VLESS آماده کرده‌ایم که می‌توانید بر روی سرور خود نصب کنید. دقت کنید که این فقط برای راحتی شما است و می‌توانید همواره با مراجعه به پنل X-UI تغییرات لازم را اعمال کنید. برای یادگیری در مورد این روش می‌توانید به</span>
+                        <a href="https://github.com/iranxray/hope#%D9%BE%D8%B1%D9%88%D8%AA%DA%A9%D9%84-vless-%D8%A7%DB%8C%D9%85%D9%86-sunglasses">مقاله</a>
+                        <span>ما در ریپوی امید مراجعه کنید.</span>
+                    </p>
+                </div>
+                @foreach (var config in VlessConfigs)
+                {
+                    <XRayConfigUI Config="@config"
+                              XuiConnection="@XuiConnection"
+                              SshConnection="@SshConnection"></XRayConfigUI>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public SshConnectionOptions SshConnection { get; set; }
+
+    [Parameter]
+    public XuiConnectionOptions XuiConnection { get; set; }
+
+    [Parameter]
+    public IEnumerable<XrayConfig> TrojanConfigs { get; set; }
+
+    [Parameter]
+    public IEnumerable<XrayConfig> VlessConfigs { get; set; }
+}

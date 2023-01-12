@@ -1,0 +1,62 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client;
+@using Xray.Hope.Web.Client.Components
+@using Xray.Hope.Web.Client.Components.Generic
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Client.Services.State;
+@using Xray.Hope.Web.Shared;
+@using static Xray.Hope.Web.Client.Services.State.HubConnectionSucceeded;
+
+@inject IConfiguration Configuration
+@inject StateStore StateStore;
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+@inject HopeHttpClient HopeHttpClient
+
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <Toasts />
+
+        <div class="top-row px-4">
+            <a href="https://github.com/iranxray/hope/blob/main/readme.md" target="_blank">درباره پروژه امید</a>
+
+            <span style="font-size:12px">
+                نسخه @Configuration["version"]
+            </span>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hopehub"))
+            .Build();
+
+        hubConnection.On<string>(HopeHubMethod.ReceiveScriptExecutionOutput, (line) =>
+        {
+            StateStore.Publish(new XuiInstallOutputReceived(new(line)));
+        });
+
+        hubConnection.On(HopeHubMethod.FinishScriptExection, () =>
+        {
+            StateStore.Publish(new XuiInstallFinished());
+        });
+
+        await hubConnection.StartAsync();
+
+        StateStore.Publish(new HubConnectionSucceeded(new(hubConnection.ConnectionId)));
+    }
+}

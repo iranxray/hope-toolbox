@@ -1,0 +1,170 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.SignalR.Client;
+@using Xray.Hope.Web.Client.Components
+@using Xray.Hope.Web.Client.Components.Generic;
+@using Xray.Hope.Web.Client.Models;
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Client.Services.State;
+@using Xray.Hope.Web.Shared.DTO.CreateInstallScripts;
+@using Xray.Hope.Web.Shared.DTO.ExecuteScripts;
+@using Xray.Hope.Web.Shared.DTO.GetAvailableConfigs;
+@using Xray.Hope.Web.Client.Models.Domain.Constants;
+@using Xray.Hope.Web.Client.Models.Domain;
+
+@inject StateStore StateStore;
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject HopeHttpClient HopeHttpClient
+@inject NotificationService NotificationService
+
+<GenericModal @ref="modal"></GenericModal>
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <span>
+            <i class="bi bi-plug"></i>
+        </span>
+        نصب X-UI
+    </div>
+    <div class="card-body">
+        <div>
+            <p>
+                به نظر می‌آید که اپلیکیشن X-UI بر روی سرور شما نصب نیست. برای همین ما اسکریپت نصب را در زیر آماده کرده‌ایم. می‌توانید آن را کپی کرده و مستقیما بر روی سرور اجرا کنید و یا با فشردن دکمه پایین فرایند نصب را به ما واگذار کنید.
+            </p>
+
+            <div>
+                <button type="button" class="btn btn-primary" @onclick="ExecuteInstallScripts" disabled="@shouldDisableInstallButton">
+                    <i class="bi bi-box-arrow-in-up text-white" style="vertical-align:sub"></i>
+                    نصب X-UI
+                </button>
+                <span class="form-text mt-2" style="display: block;" hidden="@SshConnection?.IsValid()">
+                    <i class="bi bi-bell"></i>
+                    برای نصب نیاز هست تا نام کاربری و رمزعبور سرور را هم وارد نمایید.
+                </span>
+                <div hidden="@(installStatus != ServerOperationStatus.Executing)" class="spinner-border spinner-border-sm text-success ms-3" style="vertical-align:sub" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="script-generation mt-3">
+            <div class="console-container mb-2" style="direction:ltr">
+                <div class="console-terminal">
+                    <div class="console-toolbar">
+                        <div class="console-toolbar-buttons">
+                            <button class="console-toolbar-button console-toolbar-button-exit">&#10005;</button>
+                            <button class="console-toolbar-button">&#9472;</button>
+                            <button class="console-toolbar-button">&#9723;</button>
+                        </div>
+                        <p class="console-toolbar-user">xray@hope:~</p>
+                    </div>
+                    <div class="console-body" hidden="@(installStatus != ServerOperationStatus.NotStarted)">
+                        <textarea class="console-text" @bind="Scripts"></textarea>
+                    </div>
+                    <div class="console-body" hidden="@(installStatus == ServerOperationStatus.NotStarted)">
+                        <textarea @ref="consoleOutputTextareaRef" class="console-text" @bind="consoleOutput"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public SshConnectionOptions SshConnection { get; set; }
+
+    [Parameter]
+    public XuiConnectionOptions XuiConnection { get; set; }
+
+    [Parameter]
+    public string HubConnectionId { get; set; }
+
+    [Parameter]
+    public string Scripts { get; set; }
+
+    private GenericModal modal;
+    private string consoleOutput = string.Empty;
+    private ElementReference consoleOutputTextareaRef;
+    private ServerOperationStatus installStatus;
+    private bool shouldDisableInstallButton => installStatus == ServerOperationStatus.Executing || SshConnection?.IsValid() != true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateStore.OnStateEventRaised += HandleStateChanged;
+    }
+
+    private async Task ExecuteInstallScripts()
+    {
+        installStatus = ServerOperationStatus.Executing;
+
+        StateStore.Publish(new XuiInstallScriptsBeingExecuted());
+
+        consoleOutput = string.Empty;
+
+        try
+        {
+            await HopeHttpClient.ExecuteScript(new ExecuteScriptsRequest
+                {
+                    ServerAddress = SshConnection.Host,
+                    ServerUsername = SshConnection.Username,
+                    ServerPassword = SshConnection.Password,
+                    ServerPrivateKeyContent = SshConnection.PrivateKeyContent,
+                    ServerSshPort = SshConnection.Port,
+                    HubConnectionId = HubConnectionId,
+                    Script = Scripts
+                });
+        }
+        catch
+        {
+            installStatus = ServerOperationStatus.NotStarted;
+
+            NotificationService.AddMessage(
+                "ناموفق",
+                "اجرای اسکریپت بر روی سرور موفقیت‌آمیز نبود. لطفا از صحت مشخصات سرور مطمئن شوید. مجددا تلاش کنید. اگر باز هم نشد ممکن است نیاز داشته باشید تا سرور را restart کنید.",
+                NotificationStatus.Error,
+                10000);
+        }
+    }
+
+    private async Task HandleStateChanged(StateEvent stateEvent)
+    {
+        if (stateEvent is XuiInstallOutputReceived xuiInstallOutputReceived)
+        {
+            consoleOutput += xuiInstallOutputReceived.Value.Output;
+            await JSRuntime.InvokeVoidAsync("scrollConsoleOutputToBottom", consoleOutputTextareaRef);
+        }
+
+        if (stateEvent is XuiInstallFinished xuiInstallFinished)
+        {
+            installStatus = ServerOperationStatus.Succeeded;
+
+            await modal.Open
+            (
+                "نصب تمام شد",
+                "ما اسکریپت‌های نصب را بر روی سرور شما اجرا کردیم. لطفا X-UI مجددا بر روی دکمه «تست ارتباط» کلیک کنید تا از صحت نصب اطمینان حاصل کنید. در گام بعدی می‌توانید کانفیگ‌های لازم را برای عبور از فیلترینگ بر روی سرور نصب کنید.",
+                NotificationStatus.Success
+            );
+
+            NotificationService.AddMessage(
+                "موفق",
+                "اسکریپت با موفقیت بر روی سرور اجرا شد.",
+                NotificationStatus.Success);
+
+            StateStore.Publish(new XuiInstallScriptsExecuted());
+        }
+
+        if (stateEvent is ServerConnectionBeingChecked
+            || stateEvent is XuiConnectionBeingChecked)
+        {
+            installStatus = ServerOperationStatus.NotStarted;
+            consoleOutput = string.Empty;
+        }
+
+        StateHasChanged();
+    }
+}

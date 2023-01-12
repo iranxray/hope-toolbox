@@ -1,0 +1,43 @@
+﻿@using Xray.Hope.Web.Client.Models.Domain;
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Client.Models.Domain.Constants;
+
+@inject NotificationService NotificationStore;
+
+
+<div aria-live="polite" aria-atomic="true" class="position-relative" style="z-index: 7000">
+    <div class="toast-container  position-fixed bottom-0 start-0 p-3">
+
+        @foreach (var message in Messages)
+        {
+            <Toast Message="message"></Toast>
+        }
+
+    </div>
+</div>
+
+@code {
+
+    private List<ToastMessage> Messages { get; set; } = new List<ToastMessage>();
+
+    protected override void OnInitialized()
+    {
+        if (NotificationStore is not null)
+            NotificationStore.OnNotify += OnNotify;
+
+        base.OnInitialized();
+    }
+
+    private void OnNotify(ToastMessage toastMessage)
+    {
+        if (Messages is null)
+            Messages = new();
+
+        if (toastMessage is null)
+            return;
+
+        Messages.Add(toastMessage);
+
+        StateHasChanged();
+    }
+}

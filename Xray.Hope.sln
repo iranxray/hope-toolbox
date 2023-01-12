@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xray.Hope.Web.Server", "Xray.Hope.Web\Server\Xray.Hope.Web.Server.csproj", "{DA126926-C3CF-475A-9D55-5EEA58E7E53F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xray.Hope.Web.Client", "Xray.Hope.Web\Client\Xray.Hope.Web.Client.csproj", "{56F03977-93BA-4293-9EBF-304D79D6F1C8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xray.Hope.Web.Shared", "Xray.Hope.Web\Shared\Xray.Hope.Web.Shared.csproj", "{C7653596-A3BC-4122-969D-B27DBE3CBCB8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xray.Hope.Service", "Xray.Hope.Service\Xray.Hope.Service.csproj", "{B60CBD8A-48AF-4328-8E3B-81E4377B4716}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DA126926-C3CF-475A-9D55-5EEA58E7E53F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA126926-C3CF-475A-9D55-5EEA58E7E53F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA126926-C3CF-475A-9D55-5EEA58E7E53F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA126926-C3CF-475A-9D55-5EEA58E7E53F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56F03977-93BA-4293-9EBF-304D79D6F1C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56F03977-93BA-4293-9EBF-304D79D6F1C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56F03977-93BA-4293-9EBF-304D79D6F1C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56F03977-93BA-4293-9EBF-304D79D6F1C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7653596-A3BC-4122-969D-B27DBE3CBCB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7653596-A3BC-4122-969D-B27DBE3CBCB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7653596-A3BC-4122-969D-B27DBE3CBCB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7653596-A3BC-4122-969D-B27DBE3CBCB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B60CBD8A-48AF-4328-8E3B-81E4377B4716}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B60CBD8A-48AF-4328-8E3B-81E4377B4716}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B60CBD8A-48AF-4328-8E3B-81E4377B4716}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B60CBD8A-48AF-4328-8E3B-81E4377B4716}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3ADB8A56-68D4-45F4-B038-FE8051A97930}
+	EndGlobalSection
+EndGlobal

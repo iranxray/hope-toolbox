@@ -1,0 +1,92 @@
+﻿@using Xray.Hope.Web.Client.Models;
+@using Xray.Hope.Web.Client.Models.Domain;
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Shared.DTO.GetAvailableConfigs;
+@using Xray.Hope.Web.Client.Models.Domain.Constants;
+
+@inject IJSRuntime JSRuntime
+
+<div class="toast hide" @ref="toastElement" data-bs-delay="@Message.Delay">
+    <div class="toast-header">
+        <i class="@Icon"></i>
+        <strong class="me-auto">@Message.Title</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body text-wrap" style="text-align:justify">
+        @Message.Body
+    </div>
+    <div class="progress" role="progressbar" style="height: 2px">
+        <div class="progress-bar @ProgressBarColor" style="width: @(progressBarWidth)%"></div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public ToastMessage Message { get; set; }
+
+    private string Icon
+    {
+        get
+        {
+            return this.Message.Status switch
+            {
+                NotificationStatus.Success => "bi bi-check-circle-fill text-success me-2",
+                NotificationStatus.Error => "bi-fire text-danger me-2",
+                NotificationStatus.Warning => "bi bi-exclamation-triangle-fill text-warning me-2",
+            };
+        }
+    }
+
+    private string ProgressBarColor
+    {
+        get
+        {
+            return this.Message.Status switch
+            {
+                NotificationStatus.Success => "bg-success",
+                NotificationStatus.Error => "bg-danger",
+                NotificationStatus.Warning=> "bg-warning",
+            };
+        }
+    }
+
+    private ElementReference toastElement;
+    private double progressBarWidth = 100;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender && Message.Delay > 0)
+        {
+            await ShowAsync();
+
+            var width = ((double)10000 / Message.Delay);
+
+            using var periodicTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
+
+            while (await periodicTimer.WaitForNextTickAsync())
+            {
+                progressBarWidth -= width;
+
+                if (progressBarWidth < 0)
+                {
+                    break;
+                }
+
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task ShowAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("showToast", toastElement);
+    }
+}

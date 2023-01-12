@@ -1,0 +1,115 @@
+﻿@using Xray.Hope.Web.Client.Models;
+@using Xray.Hope.Web.Client.Models.Domain;
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Client.Models.Domain.Constants;
+@using Xray.Hope.Web.Shared.DTO.GetAvailableConfigs;
+
+@inject IJSRuntime JSRuntime
+@inject HopeHttpClient HopeHttpClient
+@inject NotificationService NotificationStore;
+
+<div @ref="modalElement" class="modal fade" id="copy-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pe-4 ps-4">
+                <div class="mb-2">
+                    <p style="text-align:justify">@body</p>
+                </div>
+                <div class="mb-4">
+                    <button class="btn btn-primary btn-sm" style="width: 100%" @onclick="IsportOpen">
+                        <span hidden="@(portCheckingStatus != ServerOperationStatus.NotStarted)">
+                            آیا پورت باز است؟
+                        </span>
+                        <div hidden="@(portCheckingStatus != ServerOperationStatus.Executing)" class="spinner-border spinner-border-sm text-white me-2" style="vertical-align:sub" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </button>
+                    <div class="mt-2">
+                        <span class="form-text" hidden="@(isPortOpen != true || portCheckingStatus == ServerOperationStatus.Executing)">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            پورت باز می‌باشد.
+                        </span>
+                        <span class="form-text" hidden="@(isPortOpen != false || portCheckingStatus == ServerOperationStatus.Executing)">
+                            <i class="bi-fire text-danger"></i>
+                            پورت بسته می‌باشد. به مستندات سرور خود برای باز کردن پورت رجوع کنید.
+                        </span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <textarea class="form-control" readonly style="resize: none;direction:ltr;height:130px">@Link</textarea>
+                    <button type="button" class="btn btn-sm btn-outline-success input-group-text ms-1" @onclick="Copy">
+                        <i style="vertical-align:middle" class="bi bi-clipboard"></i>
+                        <span>
+                            کپی
+                        </span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public XrayConfig Config { get; set; }
+
+    [Parameter]
+    public XuiConnectionOptions XuiConnection { get; set; }
+
+    [Parameter]
+    public string Link { get; set; }
+
+    private string title = "لینک اتصال به پروسی";
+    private string body = "در زیر لینک اتصال به پروکسی را می‌بینید. می‌توانید آن را کپی کرده و در اپلیکیشن مربوطه استفاده کنید. پیش از استفاده از باز بودن پورت اطمینان حاصل کنید.";
+    private ElementReference modalElement;
+    private bool? isPortOpen;
+    private ServerOperationStatus portCheckingStatus;
+
+    public async Task Open()
+    {
+        await JSRuntime.InvokeVoidAsync("openModal", modalElement);
+        StateHasChanged();
+    }
+
+    private async Task IsportOpen()
+    {
+        portCheckingStatus = ServerOperationStatus.Executing;
+
+        try
+        {
+            var response = await HopeHttpClient.IsPortOpenAsync(XuiConnection.ServerAddress, Config.Port);
+
+            if (response.IsSuccess)
+            {
+                isPortOpen = response.Value.IsPortOpen;
+            }
+            else
+            {
+                isPortOpen = false;
+            }
+
+            portCheckingStatus = ServerOperationStatus.NotStarted;
+        }
+        catch
+        {
+            isPortOpen = false;
+            portCheckingStatus = ServerOperationStatus.NotStarted;
+        }
+    }
+
+    private async Task Copy()
+    {
+        await JSRuntime.InvokeVoidAsync("copyText", Link);
+        NotificationStore.AddMessage("موفق", "لینک با موفقیت کپی شد.", NotificationStatus.Success);
+
+        StateHasChanged();
+    }
+}

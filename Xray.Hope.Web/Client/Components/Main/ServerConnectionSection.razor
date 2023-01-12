@@ -1,0 +1,306 @@
+﻿@using Xray.Hope.Web.Client.Models.Domain.Constants;
+@using Xray.Hope.Web.Client.Models.Domain;
+@using Xray.Hope.Web.Client.Services.State;
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.SignalR.Client;
+@using Xray.Hope.Web.Client.Components
+@using Xray.Hope.Web.Client.Models;
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Shared.DTO.CreateInstallScripts;
+@using Xray.Hope.Web.Shared.DTO.GetAvailableConfigs;
+@using Xray.Hope.Web.Client.Models.ViewModels;
+
+@inject IJSRuntime JSRuntime
+@inject StateStore StateStore
+@inject HopeHttpClient HopeHttpClient
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <span>
+            <i class="bi bi-reception-4" style="vertical-align:middle"></i>
+        </span>
+        مشخصات اتصال به سرور
+    </div>
+    <div class="card-body">
+
+        <EditForm Model="@serverConnectionFormViewModel" OnValidSubmit="@CheckServerConnection">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="container-fluid">
+                <div class="row mt-1">
+                    <div class="col-6">
+                        <div class="container-fluid">
+                            <h4><span class="badge bg-secondary">مشخصات سرور</span></h4>
+                            <p>
+                                مشخصات سرور خود را در فرم زیر وارد کنید. مشخصات سرور شما هیچ جا ثبت نخواهد شد.
+                            </p>
+
+                            <div class="row mt-1">
+                                <div class="col-12">
+                                    <div class="mb-3" style="height:90px">
+                                        <label for="inputAddress" class="form-label">آدرس سرور</label>
+                                        <InputText class="form-control" id="inputServerAddress" style="direction:ltr" @bind-Value="serverConnectionFormViewModel.ServerAddress" />
+                                        <div id="emailHelp" class="form-text"> در صورت استفاده از domain برای شما certificate معتبر تولید خواهد شد.</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="mb-3" style="height:90px">
+                                        <label for="inputServerUsername" class="form-label">نام کاربری سرور</label>
+                                        <InputText class="form-control" id="inputServerUsername" style="direction:ltr" @bind-Value="serverConnectionFormViewModel.ServerUsername" />
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="mb-3" style="height:90px">
+                                        <label for="inputServerPassword" class="form-label">رمز عبور سرور</label>
+                                        <div class="input-group mb-3">
+                                            <select class="btn btn-outline-secondary dropdown-toggle" @bind="@passwordType">
+                                                <option value="@SshPasswordType.Word">گذرواژه</option>
+                                                <option value="@SshPasswordType.Cert">certficate</option>
+                                            </select>
+                                            <InputText hidden="@(passwordType != @SshPasswordType.Word)" class="form-control" id="inputServerPassword" style="direction:ltr" @bind-Value="serverConnectionFormViewModel.ServerPassword"></InputText>
+                                            <InputText hidden="@(passwordType != @SshPasswordType.Cert)" class="form-control" @bind-Value="serverConnectionFormViewModel.PrivateKeyPath" style="direction:ltr" />
+                                            <button type="button" hidden="@(passwordType != @SshPasswordType.Cert)" class="btn btn-outline-secondary" onclick="document.getElementById('privateKeyPathUpload').click()">آپلود</button>
+                                            <InputFile style="display:none" id="privateKeyPathUpload" OnChange="OnInputFileChange" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="mb-3" style="height:90px">
+                                        <label for="inputServerSshPort" class="form-label">پورت SSH سرور</label>
+                                        <InputNumber class="form-control" id="inputServerSshPort" style="direction:ltr" @bind-Value="serverConnectionFormViewModel.ServerSshPort" />
+                                        <div id="serverSshPortHelp" class="form-text">این پورت به صورت پیش‌فرض برابر با 22 می‌باشد.</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="container-fluid">
+                            <h4><span class="badge bg-secondary">مشخصات X-UI</span></h4>
+
+                            <p mt-1 mb-1>
+                                در فرم زیر هم مشخص کنید که تمایل دارید پنل X-UI بر روی چه پورتی و با چه نام کاربری و رمز عبوری نصب شود.
+                            </p>
+
+                            <div class="row mt-1">
+                                <div class="col-12">
+                                    <div class="mb-3" style="height:90px">
+                                        <label for="inputXUIPort" class="form-label">پورت پنل X-UI</label>
+                                        <InputNumber class="form-control" id="inputXUIPort" style="direction:ltr" @bind-Value="serverConnectionFormViewModel.XuiPort" />
+                                        <div id="xuiPortHelp" class="form-text">یک عدد انتخابی بین 20000 تا 60000، مثلا 34567</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="mb-3" style="height:90px">
+                                        <label for="inputXUIUsername" class="form-label">نام کاربری X-UI</label>
+                                        <InputText class="form-control" id="inputXUIUsername" style="direction:ltr" @bind-Value="serverConnectionFormViewModel.XuiUsername" />
+                                        <div id="uxiUsernamelHelp" class="form-text">مثلا admin</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="mb-3" style="height:90px">
+                                        <label for="inputXUIPassword" class="form-label">رمز عبور X-UI</label>
+                                        <InputText class="form-control" id="inputXUIPassword" style="direction:ltr" @bind-Value="serverConnectionFormViewModel.XuiPassword" />
+                                        <div id="xuiPasswordHelp" class="form-text">هر چی که یادتون می‌مونه.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container-fluid align-middle mt-2 pe-4 ps-4">
+
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary" style="width:100%" disabled="@(serverTestConnectionStatus == ServerOperationStatus.Executing || xuiInstallStatus == ServerOperationStatus.Executing)">
+                                <i class="bi bi-wifi text-white" style="vertical-align:middle"></i>
+                                تست ارتباط
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row align-middle">
+
+                        <div class="col" hidden="@(!ShowConnectionCheckProgress)">
+                            <div class="alert alert-warning" role="alert">
+                                <div>
+                                    <div class="mb-2">
+                                        <i hidden="@(serverTestConnectionStatus != ServerOperationStatus.Failed)" class="bi bi-emoji-frown" style="font-size: 20px;color: green;vertical-align: sub;"></i>
+                                        <i hidden="@(serverTestConnectionStatus != ServerOperationStatus.Succeeded)" class="bi bi-check text-success" style="font-size: 20px;color: green;vertical-align: sub;"></i>
+                                        <div hidden="@(serverTestConnectionStatus != ServerOperationStatus.Executing)" class="spinner-border spinner-border-sm text-success me-2" style="vertical-align:sub" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span>@serverTestConnectionStatusText</span>
+                                    </div>
+                                    <div>
+                                        <i hidden="@(xuiTestConnectionStatus != ServerOperationStatus.Failed)" class="bi bi-emoji-frown" style="font-size: 20px;color: green;vertical-align: sub;"></i>
+                                        <i hidden="@(xuiTestConnectionStatus != ServerOperationStatus.Succeeded)" class="bi bi-check text-success" style="font-size: 20px;color: green;vertical-align: sub;"></i>
+                                        <div hidden="@(xuiTestConnectionStatus != ServerOperationStatus.Executing)" class="spinner-border spinner-border-sm text-success me-2" style="vertical-align:sub" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span>@xuiTestConnectionStatusText</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+
+    private SshPasswordType passwordType = SshPasswordType.Word;
+    private string serverTestConnectionStatusText = "";
+    private string xuiTestConnectionStatusText = "";
+    private ServerConnectionFormViewModel serverConnectionFormViewModel = new();
+
+    private ServerOperationStatus serverTestConnectionStatus;
+    private ServerOperationStatus xuiTestConnectionStatus;
+    private ServerOperationStatus xuiInstallStatus;
+
+    private bool ShowConnectionCheckProgress => xuiTestConnectionStatus != ServerOperationStatus.NotStarted && serverTestConnectionStatus != ServerOperationStatus.NotStarted;
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateStore.OnStateEventRaised += HandleStateChanged;
+    }
+
+    private async Task CheckServerConnection()
+    {
+        Reset();
+
+        StateStore.Publish(new ServerConnectionBeingChecked());
+
+        var serverConnection = new SshConnectionOptions
+        {
+            Host = serverConnectionFormViewModel.ServerAddress,
+            Username = serverConnectionFormViewModel.ServerUsername,
+            Password = serverConnectionFormViewModel.ServerPassword,
+            PrivateKeyContent = serverConnectionFormViewModel.PrivateKeyContent,
+            Port = serverConnectionFormViewModel.ServerSshPort
+        };
+
+        var serverConnectionResult = await HopeHttpClient.CheckServerConnection(serverConnection);
+
+        if (serverConnectionResult is null)
+        {
+            serverTestConnectionStatusText = "اتصال به سرور ناموفق بود. مطمئن شوید که پورت ssh باز بوده و مشخصات ورود به سرور را درست وارد کرده‌اید.";
+            serverTestConnectionStatus = ServerOperationStatus.Failed;
+            StateStore.Publish(new ServerConnectionFailed(serverConnection));
+        }
+        else if (!serverConnectionResult.Value.IsSshPortOpen)
+        {
+            serverTestConnectionStatusText = "اتصال به سرور ناموفق بود. اگر مایل به نصب X-UI هستید، لطفا مطمئن شوید که پورت ssh باز باشد.";
+            serverTestConnectionStatus = ServerOperationStatus.Failed;
+            StateStore.Publish(new ServerConnectionFailed(serverConnection));
+        }
+        else if (!serverConnectionResult.Value.CanConnectSsh)
+        {
+            serverTestConnectionStatusText = "اتصال به سرور ناموفق بود. اگر مایل به نصب X-UI هستید، لطفا نام کاربری و رمزعبور سرور را صحیح وارد کنید.";
+            serverTestConnectionStatus = ServerOperationStatus.Failed;
+            StateStore.Publish(new ServerConnectionFailed(serverConnection));
+        }
+        else
+        {
+            serverTestConnectionStatusText = "اتصال به سرور موفقیت‌آمیز بود.";
+            serverTestConnectionStatus = ServerOperationStatus.Succeeded;
+
+            StateStore.Publish(new ServerConnectionSucceeded(serverConnection));
+        }
+
+        StateStore.Publish(new XuiConnectionBeingChecked());
+
+
+        var xuiConnection = new XuiConnectionOptions
+            {
+                ServerAddress = serverConnectionFormViewModel.ServerAddress,
+                XuiPassword = serverConnectionFormViewModel.XuiPassword,
+                XuiPort = serverConnectionFormViewModel.XuiPort,
+                XuiUsername = serverConnectionFormViewModel.XuiUsername
+            };
+
+        var xuiConnectionResult = await HopeHttpClient.CheckXuiConnection(xuiConnection);
+
+        if (xuiConnectionResult is null)
+        {
+            xuiTestConnectionStatusText = "اتصال به X-UI ناموفق بود. از قسمت پایینی برای نصب برنامه استفاده کنید.";
+            xuiTestConnectionStatus = ServerOperationStatus.Failed;
+            StateStore.Publish(new XuiConnectionFailed(xuiConnection));
+        }
+        else if (!xuiConnectionResult.Value.IsXuiPortOpen)
+        {
+            xuiTestConnectionStatusText = "اتصال به X-UI ناموفق بود. از قسمت پایینی برای نصب برنامه استفاده کنید.";
+            xuiTestConnectionStatus = ServerOperationStatus.Failed;
+            StateStore.Publish(new XuiConnectionFailed(xuiConnection));
+        }
+        else if (!xuiConnectionResult.Value.CanLogin)
+        {
+            xuiTestConnectionStatusText = "اتصال به X-UI ناموفق بود. لطفا نام کاربری و رمزعبور را صحیح وارد کنید.";
+            xuiTestConnectionStatus = ServerOperationStatus.Failed;
+            StateStore.Publish(new XuiConnectionFailed(xuiConnection));
+        }
+        else
+        {
+            xuiTestConnectionStatusText = "اتصال به X-UI موفقیت‌آمیز بود. می‌توانید از بخش زیر برای ساخت کانفیگ‌های آماده استفاده کنید.";
+            xuiTestConnectionStatus = ServerOperationStatus.Succeeded;
+            StateStore.Publish(new XuiConnectionSucceeded(xuiConnection));
+        }
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        using var content = new MultipartFormDataContent();
+
+        foreach (var file in e.GetMultipleFiles(1))
+        {
+            serverConnectionFormViewModel.PrivateKeyPath = file.Name;
+            serverConnectionFormViewModel.PrivateKeyContent = await (new StreamReader(file.OpenReadStream(10000)).ReadToEndAsync());
+        }
+    }
+
+    private void Reset()
+    {
+        xuiInstallStatus = ServerOperationStatus.NotStarted;
+
+        serverTestConnectionStatus = ServerOperationStatus.Executing;
+        serverTestConnectionStatusText = "بررسی اتصال به سرور";
+
+        xuiTestConnectionStatus = ServerOperationStatus.Executing;
+        xuiTestConnectionStatusText = "بررسی اتصال به X-UI";
+    }
+
+    private async Task HandleStateChanged(StateEvent stateEvent)
+    {
+        if (stateEvent is XuiInstallScriptsBeingExecuted xuiInstallScriptsBeingExecuted)
+        {
+            xuiInstallStatus = ServerOperationStatus.Executing;
+        }
+
+        if (stateEvent is XuiInstallFinished xuiInstallFinished)
+        {
+            xuiInstallStatus = ServerOperationStatus.Succeeded;
+        }
+
+        StateHasChanged();
+    }
+
+    public enum SshPasswordType
+    {
+        Word,
+        Cert
+    }
+}

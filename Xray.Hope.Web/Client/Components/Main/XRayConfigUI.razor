@@ -1,0 +1,152 @@
+﻿@using Xray.Hope.Web.Client.Components;
+@using Xray.Hope.Web.Client.Components.Generic;
+@using Xray.Hope.Web.Client.Models;
+@using Xray.Hope.Web.Client.Services;
+@using Xray.Hope.Web.Shared.DTO.GetAvailableConfigs;
+@using Xray.Hope.Web.Shared;
+@using Xray.Hope.Web.Shared.DTO.InstallTrojanConfig;
+@using Xray.Hope.Web.Client.Models.Domain.Constants;
+@using Xray.Hope.Web.Client.Models.Domain;
+
+@inject NotificationService NotificationStore;
+@inject IJSRuntime JSRuntime
+@inject HopeHttpClient HopeHttpClient
+
+<div class="mt-2 me-2" style="width: 14rem;display: inline-block;">
+    <div class="card">
+        <div class="card-header bg-light" style="direction:ltr">
+            <i class="bi-star-fill" style="float: right;" hidden="@(!Config.Recommended)"></i>
+            @Config.Remark
+        </div>
+        <div class="card-body">
+            <div class="container-fluid" style="padding:0px">
+                <div class="row mt-1">
+                    <label class="col-6 col-form-label">پروتکل:</label>
+                    <div class="col-6">
+                        <input type="text" value="@Config.Protocol" class="form-control" readonly style="direction:ltr">
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <label class="col-6 col-form-label">پورت:</label>
+                    <div class="col-6">
+                        <input type="text" value="@Config.Port" class="form-control" readonly style="direction:ltr">
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <label class="col-6 col-form-label">انتقال داده:</label>
+                    <div class="col-6">
+                        <input type="text" value="@Config.Network" class="form-control" readonly style="direction:ltr">
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <label for="inputPassword" class="col-6 col-form-label">رمزنگاری:</label>
+                    <div class="col-6">
+                        <input type="text" value="@Config.Encryption" class="form-control" readonly style="direction:ltr">
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div class="btn-group" role="group" style="width:100%">
+                            <button class="btn btn-primary" @onclick="Install" disabled="@disableInstallConfig">
+                                <span style="vertical-align: middle;" hidden="@(installStatus != ServerOperationStatus.Succeeded)">
+                                    <i class="bi bi-check-circle"></i>
+                                </span>
+                                <span style="vertical-align: middle;" hidden="@(installStatus == ServerOperationStatus.Succeeded)">
+                                    <i class="bi bi-hammer text-white"></i>
+                                </span>
+                                <span hidden="@showInstallProgress">
+                                    @installConfigText
+                                </span>
+                                <div hidden="@(!showInstallProgress)" class="spinner-border spinner-border-sm text-white me-2" style="vertical-align:sub" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </button>
+                            <button class="btn btn-primary" disabled="@disableCopyLink" @onclick="OpenModal">
+                                <i class="bi bi-link-45deg text-white"></i>
+                                لینک
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3" style="height:5rem">
+                    <hr />
+                    <p class="form-text" style="text-align:justify">
+                        <i class="bi bi-lamp-fill"></i>
+                        @Config.GetDescription()
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<CopyModal @ref="copyModal"
+           Link="@configText"
+           Config="@Config"
+           XuiConnection="@XuiConnection">
+</CopyModal>
+
+@code {
+
+    [Parameter]
+    public XrayConfig Config { get; set; }
+
+    [Parameter]
+    public XuiConnectionOptions XuiConnection { get; set; }
+
+    [Parameter]
+    public SshConnectionOptions SshConnection { get; set; }
+
+    private CopyModal copyModal;
+    private ServerOperationStatus installStatus;
+    private string installConfigText = "نصب کن";
+    private bool showInstallProgress => installStatus == ServerOperationStatus.Executing;
+    private bool disableInstallConfig => installStatus != ServerOperationStatus.NotStarted;
+    private bool disableCopyLink => installStatus != ServerOperationStatus.Succeeded;
+    private string configText = "";
+
+    private async Task Install()
+    {
+        installStatus = ServerOperationStatus.Executing;
+
+        try
+        {
+            var response = await HopeHttpClient.InstallXRayConfig(Config.Id, XuiConnection, SshConnection);
+
+            if (response.IsSuccess)
+            {
+                installConfigText = "نصب شد";
+                installStatus = ServerOperationStatus.Succeeded;
+                configText = response.Value.ConfigText;
+
+                if (response.Value.IsPortOpen)
+                {
+                    NotificationStore.AddMessage("موفق", "کانفیگ با موفقیت روی سرور شما نصب شد. با اطمینان از اینکه پورت باز می‌باشد، می‌توانید لینک اتصال را استفاده کنید. ما دستور باز کردن پورت توسط ufw را بر روی سرور شما اجرا کرده ایم.", NotificationStatus.Success);
+                }
+                else
+                {
+                    NotificationStore.AddMessage("موفق", "کانفیگ با موفقیت روی سرور شما نصب شد. با اطمینان از اینکه پورت باز می‌باشد، می‌توانید لینک اتصال را استفاده کنید.", NotificationStatus.Success);
+                }
+            }
+            else
+            {
+                installStatus = ServerOperationStatus.NotStarted;
+
+                if (response.ErrorCode == "PortExists")
+                {
+                    NotificationStore.AddMessage("ناموفق", "متاسفانه نتوانستیم کانفیگ را نصب کنیم چون کانفیگ دیگری بر روی این پورت فعال می‌باشد. توجه کنید که بر روی هر پورت فقط یک کانفیگ می‌تواند وجود داشته باشد.", NotificationStatus.Error);
+                }
+            }
+        }
+        catch
+        {
+            installStatus = ServerOperationStatus.NotStarted;
+            NotificationStore.AddMessage("ناموفق", "متاسفانه نتوانستیم کانفیگ را نصب کنیم. لطفا مجددا تلاش کنید.", NotificationStatus.Error);
+        }
+    }
+
+    private async Task OpenModal()
+    {
+        await copyModal.Open();
+    }
+}
