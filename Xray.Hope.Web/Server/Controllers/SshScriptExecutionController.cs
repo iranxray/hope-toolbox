@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Xray.Hope.Service.Ssh;
 using Xray.Hope.Web.Server.Hubs;
@@ -10,6 +11,8 @@ namespace Xray.Hope.Web.Server.Controllers
     /// <summary>
     /// Controls ssh script execution on a given server.
     /// </summary>
+
+    [EnableRateLimiting("IP_BASED_RATE_LIMITER")]
     [ApiController]
     [Route("api/ssh/script")]
     public class SshScriptExecutionController : ControllerBase
