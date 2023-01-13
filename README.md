@@ -1,3 +1,5 @@
+[![Build and deploy ASP.Net Core app to Azure Web App - hope-toolbox](https://github.com/iranxray/hope-toolbox/actions/workflows/main_hope-toolbox.yml/badge.svg)](https://github.com/iranxray/hope-toolbox/actions/workflows/main_hope-toolbox.yml)
+
 # پروژه امید
 ما در پروژه امید خواهان فراهم آوردن اینترنت آزاد برای همه ایران هستیم. هدف ما ساده‌سازی و همگانی کردن دانش عبور از فیلترینگ جمهوری اسلامی است. اینجا محفلی است برای به اشتراک گذاری تکنولوژی‌هایی که برای عبور از فیلترینگ حاکمیت ایران موثر هستند. هویت ما هیچگاه مشخص نخواهد شد و تا روز آزادی تلاش‌مان را برای گسترش اینترنت آزاد در ایران ادامه خواهیم داد.
 
