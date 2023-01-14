@@ -31,9 +31,12 @@
 
                 @foreach (var config in TrojanConfigs)
                 {
-                    <XRayConfigUI Config="@config"
-                              XuiConnection="@XuiConnection"
-                              SshConnection="@SshConnection"></XRayConfigUI>
+                    <div class="mt-2 me-4" style="width: 14rem;display: inline-block;">
+
+                        <XRayConfigUI Config="@config"
+                                  XuiConnection="@XuiConnection"
+                                  SshConnection="@SshConnection"></XRayConfigUI>
+                    </div>
                 }
             </div>
         </div>
@@ -50,9 +53,12 @@
                 </div>
                 @foreach (var config in VlessConfigs)
                 {
-                    <XRayConfigUI Config="@config"
-                              XuiConnection="@XuiConnection"
-                              SshConnection="@SshConnection"></XRayConfigUI>
+                    <div class="mt-2 me-4" style="width: 14rem;display: inline-block;">
+
+                        <XRayConfigUI Config="@config"
+                                  XuiConnection="@XuiConnection"
+                                  SshConnection="@SshConnection"></XRayConfigUI>
+                    </div>
                 }
             </div>
         </div>

@@ -4,6 +4,10 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
   </PropertyGroup>
 
   <ItemGroup>

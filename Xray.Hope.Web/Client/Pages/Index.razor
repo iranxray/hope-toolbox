@@ -175,8 +175,8 @@
                 return false;
             }
 
-            trojanConfigs = result.Value.TrojanConfigs;
-            vlessConfigs = result.Value.VlessConfigs;
+            trojanConfigs = result.Value.TrojanConfigs.OrderByDescending(c => c.Recommended);
+            vlessConfigs = result.Value.VlessConfigs.OrderByDescending(c => c.Recommended);
 
             return true;
         }
