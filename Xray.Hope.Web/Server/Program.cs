@@ -34,7 +34,7 @@ namespace Xray.Hope.Web
             var aiOptions = new ApplicationInsightsServiceOptions
             {
                 // Disables adaptive sampling.
-                EnableAdaptiveSampling = false
+                EnableAdaptiveSampling = false,
             };
 
             builder.Services.AddApplicationInsightsTelemetry(aiOptions);
