@@ -12,69 +12,67 @@
 @inject IJSRuntime JSRuntime
 @inject HopeHttpClient HopeHttpClient
 
-<div class="mt-2 me-2" style="width: 14rem;display: inline-block;">
-    <div class="card">
-        <div class="card-header bg-light" style="direction:ltr">
-            <i class="bi-star-fill" style="float: right;" hidden="@(!Config.Recommended)"></i>
-            @Config.Remark
-        </div>
-        <div class="card-body">
-            <div class="container-fluid" style="padding:0px">
-                <div class="row mt-1">
-                    <label class="col-6 col-form-label">پروتکل:</label>
-                    <div class="col-6">
-                        <input type="text" value="@Config.Protocol" class="form-control" readonly style="direction:ltr">
+<div class="card shadow rounded">
+    <div class="card-header bg-light" style="direction:ltr">
+        <i class="bi-star-fill text-warning" style="float: right;" hidden="@(!Config.Recommended)"></i>
+        @Config.Remark
+    </div>
+    <div class="card-body">
+        <div class="container-fluid" style="padding:0px">
+            <div class="row mt-1">
+                <label class="col-6 col-form-label">پروتکل:</label>
+                <div class="col-6">
+                    <input type="text" value="@Config.Protocol" class="form-control" readonly style="direction:ltr">
+                </div>
+            </div>
+            <div class="row mt-1">
+                <label class="col-6 col-form-label">پورت:</label>
+                <div class="col-6">
+                    <input type="text" value="@Config.Port" class="form-control" readonly style="direction:ltr">
+                </div>
+            </div>
+            <div class="row mt-1">
+                <label class="col-6 col-form-label">انتقال داده:</label>
+                <div class="col-6">
+                    <input type="text" value="@Config.Network" class="form-control" readonly style="direction:ltr">
+                </div>
+            </div>
+            <div class="row mt-1">
+                <label for="inputPassword" class="col-6 col-form-label">رمزنگاری:</label>
+                <div class="col-6">
+                    <input type="text" value="@Config.Encryption" class="form-control" readonly style="direction:ltr">
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <div class="btn-group" role="group" style="width:100%">
+                        <button class="btn btn-primary" @onclick="Install" disabled="@disableInstallConfig">
+                            <span style="vertical-align: middle;" hidden="@(installStatus != ServerOperationStatus.Succeeded)">
+                                <i class="bi bi-check-circle"></i>
+                            </span>
+                            <span style="vertical-align: middle;" hidden="@(installStatus == ServerOperationStatus.Succeeded)">
+                                <i class="bi bi-hammer text-white"></i>
+                            </span>
+                            <span hidden="@showInstallProgress">
+                                @installConfigText
+                            </span>
+                            <div hidden="@(!showInstallProgress)" class="spinner-border spinner-border-sm text-white me-2" style="vertical-align:sub" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </button>
+                        <button class="btn btn-primary" disabled="@disableCopyLink" @onclick="OpenModal">
+                            <i class="bi bi-link-45deg text-white"></i>
+                            لینک
+                        </button>
                     </div>
                 </div>
-                <div class="row mt-1">
-                    <label class="col-6 col-form-label">پورت:</label>
-                    <div class="col-6">
-                        <input type="text" value="@Config.Port" class="form-control" readonly style="direction:ltr">
-                    </div>
-                </div>
-                <div class="row mt-1">
-                    <label class="col-6 col-form-label">انتقال داده:</label>
-                    <div class="col-6">
-                        <input type="text" value="@Config.Network" class="form-control" readonly style="direction:ltr">
-                    </div>
-                </div>
-                <div class="row mt-1">
-                    <label for="inputPassword" class="col-6 col-form-label">رمزنگاری:</label>
-                    <div class="col-6">
-                        <input type="text" value="@Config.Encryption" class="form-control" readonly style="direction:ltr">
-                    </div>
-                </div>
-                <div class="row mt-2">
-                    <div class="col-12">
-                        <div class="btn-group" role="group" style="width:100%">
-                            <button class="@(installStatus != ServerOperationStatus.Succeeded ? "btn btn-primary" : "btn btn-success")" @onclick="Install" disabled="@disableInstallConfig">
-                                <span style="vertical-align: middle;" hidden="@(installStatus != ServerOperationStatus.Succeeded)">
-                                    <i class="bi bi-check-circle"></i>
-                                </span>
-                                <span style="vertical-align: middle;" hidden="@(installStatus == ServerOperationStatus.Succeeded)">
-                                    <i class="bi bi-hammer text-white"></i>
-                                </span>
-                                <span hidden="@showInstallProgress">
-                                    @installConfigText
-                                </span>
-                                <div hidden="@(!showInstallProgress)" class="spinner-border spinner-border-sm text-white me-2" style="vertical-align:sub" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </button>
-                            <button class="btn btn-primary" disabled="@disableCopyLink" @onclick="OpenModal">
-                                <i class="bi bi-link-45deg text-white"></i>
-                                لینک
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-3" style="height:5rem">
-                    <hr />
-                    <p class="form-text" style="text-align:justify">
-                        <i class="bi bi-lamp-fill"></i>
-                        @Config.GetDescription()
-                    </p>
-                </div>
+            </div>
+            <div class="mt-3" style="height:5rem">
+                <hr />
+                <p class="form-text" style="text-align:justify">
+                    <i class="bi bi-info-circle @GetDescriptionIconColor()"></i>
+                    @Config.GetDescription()
+                </p>
             </div>
         </div>
     </div>
@@ -96,6 +94,11 @@
 
     [Parameter]
     public SshConnectionOptions SshConnection { get; set; }
+
+    private string GetDescriptionIconColor()
+    {
+        return Config?.Description is not null ? "text-info" : "";
+    }
 
     private CopyModal copyModal;
     private ServerOperationStatus installStatus;

@@ -1,8 +1,12 @@
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.ResponseCompression;
+using System.Net;
+using System.Threading.RateLimiting;
 using Xray.Hope.Service.Ssh;
 using Xray.Hope.Service.Telnet;
 using Xray.Hope.Service.Xui;
 using Xray.Hope.Web.Server.Hubs;
+using Xray.Hope.Web.Server.Models.Configurations;
 
 namespace Xray.Hope.Web
 {
@@ -27,24 +31,53 @@ namespace Xray.Hope.Web
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
 
-            var aiOptions = new Microsoft.ApplicationInsights.AspNetCore.Extensions.ApplicationInsightsServiceOptions();
+            var aiOptions = new ApplicationInsightsServiceOptions
+            {
+                // Disables adaptive sampling.
+                EnableAdaptiveSampling = false,
+            };
 
-            // Disables adaptive sampling.
-            aiOptions.EnableAdaptiveSampling = false;
+            builder.Services.AddApplicationInsightsTelemetry(aiOptions);
 
-            builder.Services.AddApplicationInsightsTelemetry();
+            var rateLimitOptions = new HopeRateLimiterOptions();
+            builder.Configuration.GetSection("SshExecutionRateLimiterOptions").Bind(rateLimitOptions);
+
+            var userPolicyName = "IP_BASED_RATE_LIMITER";
+            builder.Services.AddRateLimiter(rateLimiterOptions =>
+            {
+                rateLimiterOptions.AddPolicy(userPolicyName, context =>
+                {
+                    var remoteIpAddress = context.Connection.RemoteIpAddress;
+
+                    if (!IPAddress.IsLoopback(remoteIpAddress!))
+                    {
+                        return RateLimitPartition.GetSlidingWindowLimiter(remoteIpAddress,
+                            _ => new SlidingWindowRateLimiterOptions
+                            {
+                                PermitLimit = rateLimitOptions.PermitLimit,
+                                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                                QueueLimit = rateLimitOptions.QueueLimit,
+                                Window = TimeSpan.FromSeconds(rateLimitOptions.Window),
+                                SegmentsPerWindow = rateLimitOptions.SegmentsPerWindow
+                            });
+                    }
+
+                    return RateLimitPartition.GetNoLimiter(IPAddress.Loopback);
+                });
+            });
 
             var app = builder.Build();
-            //app.UseResponseCompression();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+
                 app.UseWebAssemblyDebugging();
             }
             else
             {
                 app.UseExceptionHandler("/Error");
+                app.UseResponseCompression();
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
@@ -55,10 +88,11 @@ namespace Xray.Hope.Web
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseRateLimiter();
 
             app.MapRazorPages();
             app.MapControllers();
+
             app.MapHub<ConsoleHub>("/hopehub");
             app.MapFallbackToFile("index.html");
 

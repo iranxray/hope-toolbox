@@ -12,11 +12,11 @@ yes | apt-get install ufw;
 # Download and install x-ui.
 wget https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh
 
-echo "y
+echo 'y
 $MYUSER
 $MYPASS
 $MYPORT
-" | bash install.sh;
+' | bash install.sh;
 
 x-ui start;
 

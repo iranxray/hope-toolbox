@@ -110,7 +110,7 @@ namespace Xray.Hope.Web.Server.Controllers
 
             if (response.IsSuccess)
             {
-                _logger.LogInformation("Successfully Installed inbound config of protocol `{protocol}` with encryption `{encryption}` and network `{network}` on port {port}.",
+                _logger.LogInformation("Successfully installed inbound config of protocol `{protocol}` with encryption `{encryption}` and network `{network}` on port {port}.",
                    xrayConfig.Protocol,
                    xrayConfig.Encryption,
                    xrayConfig.Network,
@@ -127,11 +127,15 @@ namespace Xray.Hope.Web.Server.Controllers
 
                 try
                 {
-                    _logger.LogInformation("Open port {port} on server to allow inbound traffic.", xrayConfig.Port);
+                    _logger.LogInformation("Open port `{port}` on server to allow inbound traffic.", xrayConfig.Port);
 
                     var script = "sudo -i;" + Environment.NewLine + $"ufw allow {xrayConfig.Port}/tcp;";
-                    await _sshClient.ExecuteScriptAsync(sshConnection, script);
 
+                    var timeoutInSeconds = 10;
+                    _logger.LogInformation("Open port on the given server with via with timeout `{timeout}`", timeoutInSeconds);
+                    using var cancelationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutInSeconds));
+
+                    await _sshClient.ExecuteScriptAsync(sshConnection, script, cancellationToken: cancelationTokenSource.Token);
 
                     _logger.LogInformation("Successfully opened port {port} on server to allow inbound traffic.", xrayConfig.Port);
                 }
