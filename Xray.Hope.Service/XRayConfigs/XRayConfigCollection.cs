@@ -7,6 +7,15 @@ namespace Xray.Hope.Service.XRayConfigs
     {
         private static readonly Random random = new Random();
 
+        private static TrojanConfig TrojanTls80 = new TrojanConfig
+        {
+            Encryption = "tls",
+            Port = 443,
+            Remark = "Trojan-Tls-80",
+            Id = "TrojanTls80",
+            Recommended = true,
+        };
+
         private static TrojanConfig TrojanTls443 = new TrojanConfig
         {
             Encryption = "tls",
@@ -40,6 +49,17 @@ namespace Xray.Hope.Service.XRayConfigs
             Remark = "Trojan-Xtls-Random",
             Flow = "xtls-rprx-direct",
             Id = "TrojanXtlsRandom"
+        };
+
+
+        private static VlessConfig VlessTlsTCP80 = new VlessConfig
+        {
+            Encryption = "tls",
+            Port = 80,
+            Remark = "Vless-Tls-TCP-80",
+            Network = "tcp",
+            Id = "VlessTlsTCP80",
+            Recommended = true,
         };
 
         private static VlessConfig VlessXtlsTCP80 = new VlessConfig
@@ -113,6 +133,7 @@ namespace Xray.Hope.Service.XRayConfigs
 
         public readonly IReadOnlyCollection<XRayConfig> All = new List<XRayConfig>
         {
+            TrojanTls80,
             TrojanTls443,
             TrojanXtls443,
             TrojanTlsRandom,
@@ -122,7 +143,8 @@ namespace Xray.Hope.Service.XRayConfigs
             VlessCdn80,
             VlessTlsWs2083,
             VlessCdn8080,
-            VlessXtlsTcpRandom
+            VlessXtlsTcpRandom,
+            VlessTlsTCP80
         };
     }
 }
