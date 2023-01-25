@@ -12,8 +12,8 @@
 @inject IJSRuntime JSRuntime
 @inject HopeHttpClient HopeHttpClient
 
-<div class="card shadow rounded">
-    <div class="card-header bg-light" style="direction:ltr">
+<div class="card @GetCardBorder() shadow rounded">
+    <div class="card-header @GetCardHeaderColor() @GetCardHeaderTextColor()" style="direction:ltr">
         <i class="bi-star-fill text-warning" style="float: right;" hidden="@(!Config.Recommended)"></i>
         @Config.Remark
     </div>
@@ -46,7 +46,7 @@
             <div class="row mt-2">
                 <div class="col-12">
                     <div class="btn-group" role="group" style="width:100%">
-                        <button class="@(installStatus != ServerOperationStatus.Succeeded ? "btn btn-primary" : "btn btn-success")" @onclick="Install" disabled="@disableInstallConfig">
+                        <button class="btn btn-primary" @onclick="Install" disabled="@disableInstallConfig">
                             <span style="vertical-align: middle;" hidden="@(installStatus != ServerOperationStatus.Succeeded)">
                                 <i class="bi bi-check-circle"></i>
                             </span>
@@ -152,4 +152,10 @@
     {
         await copyModal.Open();
     }
+
+    private string GetCardBorder() => installStatus == ServerOperationStatus.Succeeded ? "border border-success border-2" : "";
+
+    private string GetCardHeaderColor() => installStatus == ServerOperationStatus.Succeeded ? "bg-success" : "bg-light";
+
+    private string GetCardHeaderTextColor() => installStatus == ServerOperationStatus.Succeeded ? "text-white" : "";
 }
