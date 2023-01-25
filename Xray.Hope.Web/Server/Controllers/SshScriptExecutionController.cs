@@ -35,7 +35,7 @@ namespace Xray.Hope.Web.Server.Controllers
         [HttpPost(template: "execute")]
         public async Task<IActionResult> ExecuteInstallScriptsAsync(ExecuteScriptsRequest request)
         {
-            var timeoutInSeconds = 120;
+            var timeoutInSeconds = 180;
             _logger.LogInformation("Execute the given script on the specified server via ssh. The timeout duration will be `{timeout}`", timeoutInSeconds);
 
             using var cancelationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutInSeconds));

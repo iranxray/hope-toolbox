@@ -104,6 +104,12 @@ namespace Xray.Hope.Service.Ssh
                 onReceivedFunc?.Invoke(line);
             };
 
+            sshShellStream.ErrorOccurred += (sender, e) =>
+            {
+                _logger.LogError(e.Exception, "The script execution failed. Exception: `{exception}`.", e.Exception.ToString());
+                executingIsDone = true;
+            };
+
             // Execute the script.
             swInput.WriteLine(script);
 

@@ -1,9 +1,17 @@
-﻿using System.Net.Sockets;
+﻿using Microsoft.Extensions.Logging;
+using System.Net.Sockets;
 
 namespace Xray.Hope.Service.Telnet
 {
     public class TelnetClient
     {
+        private readonly ILogger<TelnetClient> _logger;
+
+        public TelnetClient(ILogger<TelnetClient> logger)
+        {
+            _logger = logger;
+        }
+
         /// <summary>
         /// Checks whether the port on the host is open.
         /// </summary>
@@ -25,8 +33,9 @@ namespace Xray.Hope.Service.Telnet
 
                 return true;
             }
-            catch
+            catch(Exception e)
             {
+                _logger.LogError(e, "Failed to check if port is open. Exception: `{exception}`", e.ToString());
                 return false;
             }
         }
