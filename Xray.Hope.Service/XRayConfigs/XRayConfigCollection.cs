@@ -10,7 +10,7 @@ namespace Xray.Hope.Service.XRayConfigs
         private static TrojanConfig TrojanTls80 = new TrojanConfig
         {
             Encryption = "tls",
-            Port = 443,
+            Port = 80,
             Remark = "Trojan-Tls-80",
             Id = "TrojanTls80",
             Recommended = true,
