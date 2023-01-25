@@ -1,7 +1,5 @@
 ﻿sudo -i;
 
-apt update -y;
-
 # Install required apps.
 
 yes | apt-get install certbot;
@@ -18,8 +16,6 @@ $MYPASS
 $MYPORT
 ' | bash install.sh;
 
-x-ui start;
-
 # Config the firewall.
 
 ufw allow ssh;
@@ -30,3 +26,13 @@ ufw allow $MYPORT/tcp;
 echo "y" | ufw enable;
 
 ufw status;
+
+x-ui start;
+
+cd "/usr/local/x-ui/bin"
+
+wget https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat
+wget https://github.com/chiroots/iran-hosted-domains/releases/download/202301210059/iran.dat
+
+
+x-ui restart;

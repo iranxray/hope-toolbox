@@ -175,8 +175,8 @@
                 return false;
             }
 
-            trojanConfigs = result.Value.TrojanConfigs.OrderByDescending(c => c.Recommended);
-            vlessConfigs = result.Value.VlessConfigs.OrderByDescending(c => c.Recommended);
+            trojanConfigs = result.Value.TrojanConfigs.OrderByDescending(c => c.Recommended).ThenBy(c => c.Port);
+            vlessConfigs = result.Value.VlessConfigs.OrderByDescending(c => c.Recommended).ThenBy(c => c.Port);
 
             return true;
         }
