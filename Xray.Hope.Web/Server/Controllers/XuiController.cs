@@ -45,8 +45,8 @@ namespace Xray.Hope.Web.Server.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns>Returns the script.</returns>
-        [HttpGet("scripts")]
-        public async Task<IActionResult> GenerateInstallScriptsAsync([FromQuery] CreateInstallScriptsRequest request)
+        [HttpPost("scripts")]
+        public async Task<IActionResult> GenerateInstallScriptsAsync(CreateInstallScriptsRequest request)
         {
             _logger.LogInformation("Generate X-UI install scripts.");
 
