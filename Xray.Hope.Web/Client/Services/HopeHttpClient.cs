@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.WebUtilities;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
 using Xray.Hope.Web.Client.Models.Domain;
@@ -31,17 +32,9 @@ namespace Xray.Hope.Web.Client.Services
         /// <returns>Returns the install script.</returns>
         public async Task<Result<CreateInstallScriptsResponse>> GenerateXuiInstallScripts(CreateInstallScriptsRequest request)
         {
-            var queryParams = new Dictionary<string, string>
-            {
-                [nameof(CreateInstallScriptsRequest.ServerAddress)] = request.ServerAddress,
-                [nameof(CreateInstallScriptsRequest.XuiPort)] = request.XuiPort,
-                [nameof(CreateInstallScriptsRequest.XuiUsername)] = request.XuiUsername,
-                [nameof(CreateInstallScriptsRequest.XuiPassword)] = request.XuiPassword,
-            };
-
-            var uri = QueryHelpers.AddQueryString("api/xui/scripts", queryParams);
-
-            var response = await _httpClient.GetAsync(uri);
+            var response = await _httpClient.PostAsync(
+                "api/xui/scripts",
+                JsonContent.Create(request));
 
             if (response.StatusCode is (HttpStatusCode.OK or HttpStatusCode.BadRequest))
             {
@@ -60,7 +53,7 @@ namespace Xray.Hope.Web.Client.Services
         public async Task ExecuteScript(ExecuteScriptsRequest request)
         {
             var response = await _httpClient.PostAsync("api/ssh/script/execute", JsonContent.Create(request));
-            
+
             response.EnsureSuccessStatusCode();
         }
 
